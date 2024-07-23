@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\EmployeeRequest;
 use App\Models\Company;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -14,15 +15,15 @@ class EmployeeController extends Controller
      * Display a listing of the employees.
      */
     public function index()
-{
-    if (Auth::user()->isAdmin()) {
-        $employees = Employee::withTrashed()->paginate(10);
-    } else {
-        $employees = Employee::whereNull('deleted_at')->paginate(10);
-    }
+    {
+        if (Auth::user()->isAdmin()) {
+            $employees = Employee::withTrashed()->paginate(10);
+        } else {
+            $employees = Employee::whereNull('deleted_at')->paginate(10);
+        }
 
-    return view('employees.index', compact('employees'));
-}
+        return view('employees.index', compact('employees'));
+    }
 
 
     /**
@@ -40,16 +41,29 @@ class EmployeeController extends Controller
      */
     public function store(EmployeeRequest $request)
     {
-        Employee::create($request->validated());
+        // Handle file upload
+        $data = $request->validated();
+        if ($request->hasFile('profile_pic')) {
+            $file = $request->file('profile_pic');
+            $filePath = $file->store('profile_pics', 'public');
+            $data['profile_pic'] = $filePath;
+        }
+
+        Employee::create($data);
+
         return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
     }
+
 
     /**
      * Display the specified employee.
      */
     public function show(Employee $employee)
     {
-        return view('employees.show', compact('employee'));
+        // Ensure the profile_pic path is available
+        $profilePicUrl = $employee->profile_pic ? asset('storage/' . $employee->profile_pic) : null;
+
+        return view('employees.show', compact('employee', 'profilePicUrl'));
     }
 
     /**
@@ -58,11 +72,11 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $companies = Company::all();
-        
+
         if (request()->ajax()) {
             return view('employees._edit_form', compact('employee', 'companies'));
         }
-        
+
         return view('employees.edit', compact('employee', 'companies'));
     }
 
@@ -71,9 +85,24 @@ class EmployeeController extends Controller
      */
     public function update(EmployeeRequest $request, Employee $employee)
     {
-        $employee->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('profile_pic')) {
+            // Delete the old profile picture if it exists
+            if ($employee->profile_pic) {
+                Storage::disk('public')->delete($employee->profile_pic);
+            }
+
+            // Store the new profile picture
+            $file = $request->file('profile_pic');
+            $data['profile_pic'] = $file->store('profile_pics', 'public');
+        }
+
+        $employee->update($data);
+
         return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
     }
+
 
     /**
      * Remove the specified employee from storage.
@@ -93,20 +122,20 @@ class EmployeeController extends Controller
         $request->validate([
             'query' => 'nullable|string|max:255',
         ]);
-    
-        // Get the search query input or set it to an empty string if not provided
+
         $query = $request->input('query', '');
-    
-        // Perform a search on the employees table based on the query
-        $employees = Employee::where('first_name', 'LIKE', "%{$query}%")
-                            ->orWhere('last_name', 'LIKE', "%{$query}%")
-                            ->orWhere('email', 'LIKE', "%{$query}%")
-                            ->paginate(10);
-    
+
+        // Perform a search on the employees table based on the full name
+        $employees = Employee::where(function ($q) use ($query) {
+            $q->where('first_name', 'LIKE', "%{$query}%")
+                ->orWhere('last_name', 'LIKE', "%{$query}%")
+                ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$query}%"]);
+        })->paginate(10);
+
         if ($request->ajax()) {
             return view('partials._employee_table', compact('employees'))->render();
         }
-    
+
         return view('employees.index', compact('employees'));
     }
 }

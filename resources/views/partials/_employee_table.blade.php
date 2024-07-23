@@ -2,8 +2,7 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
+            <th>Full Name</th>
             <th>Company</th>
             <th>Email</th>
             <th>Phone</th>
@@ -13,8 +12,7 @@
     <tbody>
         @foreach($employees as $employee)
             <tr>
-                <td>{{ $employee->first_name }}</td>
-                <td>{{ $employee->last_name }}</td>
+                <td>{{ $employee->first_name }} {{ $employee->last_name }}</td>
                 <td>{{ $employee->company->name }}</td>
                 <td>{{ $employee->email }}</td>
                 <td>{{ $employee->phone }}</td>

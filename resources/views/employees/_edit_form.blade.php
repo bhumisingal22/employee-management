@@ -46,8 +46,82 @@
         @error('profile_pic')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
+
         @if($employee->profile_pic)
             <img src="{{ asset('storage/' . $employee->profile_pic) }}" alt="Profile Picture" class="mt-2" style="max-width: 150px;">
         @endif
     </div>
+    <button type="submit" class="btn btn-primary">Update</button>
 </form>
+
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Include jQuery Validate Plugin -->
+<script src="https://cdn.jsdelivr.net/jquery.validation/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/jquery.validation/1.19.5/additional-methods.min.js"></script>
+
+<!-- Client-side Validation Script -->
+<script>
+    $(document).ready(function() {
+        $('#editEmployeeForm').validate({
+            rules: {
+                first_name: {
+                    required: true,
+                    minlength: 2
+                },
+                last_name: {
+                    required: true,
+                    minlength: 2
+                },
+                company_id: {
+                    required: true
+                },
+                email: {
+                    required: true,
+                    email: true
+                },
+                phone: {
+                    number: true
+                },
+                profile_pic: {
+                    extension: "jpg|jpeg|png|gif"
+                }
+            },
+            messages: {
+                first_name: {
+                    required: "Please enter your first name.",
+                    minlength: "Your first name must be at least 2 characters long."
+                },
+                last_name: {
+                    required: "Please enter your last name.",
+                    minlength: "Your last name must be at least 2 characters long."
+                },
+                company_id: {
+                    required: "Please select a company."
+                },
+                email: {
+                    required: "Please enter a valid email address.",
+                    email: "Please enter a valid email address."
+                },
+                phone: {
+                    number: "Please enter a valid phone number."
+                },
+                profile_pic: {
+                    extension: "Please upload a valid image file (jpg, jpeg, png, gif)."
+                }
+            },
+            errorElement: "div",
+            errorPlacement: function(error, element) {
+                error.addClass('invalid-feedback');
+                element.closest('.form-group').append(error);
+            },
+            highlight: function(element) {
+                $(element).addClass('is-invalid');
+            },
+            unhighlight: function(element) {
+                $(element).removeClass('is-invalid');
+            }
+        });
+    });
+</script>
