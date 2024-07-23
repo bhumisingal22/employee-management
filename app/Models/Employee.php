@@ -21,5 +21,11 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // getting full name
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }
 

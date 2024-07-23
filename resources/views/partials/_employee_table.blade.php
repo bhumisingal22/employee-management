@@ -1,4 +1,3 @@
-<!-- resources/views/partials/_employee_table.blade.php -->
 <table class="table table-striped">
     <thead>
         <tr>
@@ -12,7 +11,7 @@
     <tbody>
         @foreach($employees as $employee)
             <tr>
-                <td>{{ $employee->first_name }} {{ $employee->last_name }}</td>
+                <td>{{ $employee->full_name }}</td>
                 <td>{{ $employee->company->name }}</td>
                 <td>{{ $employee->email }}</td>
                 <td>{{ $employee->phone }}</td>
