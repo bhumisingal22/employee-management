@@ -59,12 +59,15 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- Include jQuery Validate Plugin -->
-<script src="https://cdn.jsdelivr.net/jquery.validation/1.19.5/jquery.validate.min.js"></script>
-<script src="https://cdn.jsdelivr.net/jquery.validation/1.19.5/additional-methods.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
 
-<!-- Client-side Validation Script -->
+<!-- Include Additional Methods Plugin (if needed) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/additional-methods.min.js"></script>
+
+<!-- AJAX Form Handling Script -->
 <script>
     $(document).ready(function() {
+        // Validate the form
         $('#employee-form').validate({
             rules: {
                 first_name: {
@@ -122,6 +125,33 @@
             },
             unhighlight: function(element) {
                 $(element).removeClass('is-invalid');
+            },
+            submitHandler: function(form) {
+                // AJAX form submission
+                var formData = new FormData($(form)[0]);
+                
+                $.ajax({
+                    url: $(form).attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        // Handle success
+                        if(response.success) {
+                            alert(response.message);
+                            $(form)[0].reset();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        // Handle error
+                        alert('An error occurred: ' + xhr.statusText);
+                    }
+                });
+                
+                return false;
             }
         });
     });
